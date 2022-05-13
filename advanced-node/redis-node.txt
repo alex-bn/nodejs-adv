@@ -1,0 +1,91 @@
+1) Install or enable WSL2 and then install redis:
+
+~$ sudo apt-add-repository ppa:redislabs/redis
+~$ sudo apt-get update
+~$ sudo apt-get upgrade
+~$ sudo apt-get install redis-server
+
+2) Start the Redis server:
+~$ sudo service redis-server start
+
+3) Start a REPL session by simply typing "node" in the command line
+
+4) Testing: set & retrieve basic key-value pairs stored inside redis
+
+> const redis = require('redis')
+> const client = redis.createClient()
+> client.on('error', (err)=> console.log('Redis Client Error', err))
+> await client.connect()
+
+
+- The above code connects to localhost on port 6379. To connect to a different host or port, use a connection string in the format redis[s]://[[username][:password]@][host][:port][/db-number]:
+createClient({
+  url: 'redis://alice:foobared@awesome.redis.server:6380'
+});
+
+
+
+> await client.set('hi', 'there');
+> await client.get('hi', (err, value) => console.log(value))
+
+or simply:
+
+> await client.get('hi', console.log)
+
+
+- The above works for the following data structure:
+const redisValues = {
+  hi: 'there'
+};
+
+
+- For nested values:
+const redisNestedValues = {
+  spanish: {
+    red: 'roho',
+    orange: 'naranja',
+    blue: 'azul'
+  },
+  german: {
+    red: 'rot',
+    orange: 'orange',
+    blue: 'blau'
+  }
+}
+
+, use:
+
+> await client.HSET('german', 'red', 'rot')
+> await client.HGET('german', 'red', (err, value) => console.log(value))
+
+> await client.HSET('german', 'blue', 'blau')
+> await client.HGET('german', 'blue', console.log)
+
+
+- Pay attention that:
+> await client.set('colors', {red: 'roho'})
+
+,will return:
+> await client.get('colors', (err, val) => console.log(val))
+'[object Object]'
+
+, to get around that, use this trick:
+> await client.set('colors', JSON.stringify({ red: 'roho' }))
+> await client.get('colors', (err, val) => console.log(val.toString()))
+
+, now notice that this is still in JSON format, so you will have to parse it by using JSON.parse:
+
+> await client.get('colors', (err, val) => console.log(JSON.parse(val)))
+
+object: '{"red":"roho"}'
+
+
+- Clear client data:
+
+> await client.flushAll()
+
+
+- Expire the value of a key:
+
+> await client.set('color1', 'blue', { EX: 5 })
+
