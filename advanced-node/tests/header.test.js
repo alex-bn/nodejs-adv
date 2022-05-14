@@ -19,7 +19,7 @@ afterAll(() => {
 
 test('the header has the correct text', async () => {
   const text = await page.getContentsOf('a.brand-logo');
-  // expect(text).toEqual('Blogster');
+  expect(text).toEqual('Blogster');
 });
 
 test('clicking login starts the oauth flow', async () => {
